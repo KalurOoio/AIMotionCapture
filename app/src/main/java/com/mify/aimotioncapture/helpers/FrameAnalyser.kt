@@ -1,5 +1,6 @@
 package com.mify.aimotioncapture.helpers
 
+import android.util.Size
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
@@ -8,6 +9,8 @@ import com.google.mlkit.vision.pose.PoseDetection
 import com.google.mlkit.vision.pose.PoseDetector
 import com.google.mlkit.vision.pose.defaults.PoseDetectorOptions
 import com.mify.aimotioncapture.cameraFeature.LandMarksView
+import java.lang.Integer.max
+import java.lang.Integer.min
 
 @ExperimentalGetImage
 class FrameAnalyser(
@@ -23,13 +26,18 @@ class FrameAnalyser(
             val imageForDetector = InputImage.fromMediaImage(MediaIMG, image.imageInfo.rotationDegrees)
             detector.process(imageForDetector)
                 .addOnSuccessListener { resultPose ->
-                    viewPoint.setParameters(resultPose)
-
+                    val size = Size(
+                        min(image.width, image.height),
+                        max(image.width, image.height)
+                    )
+                    viewPoint.setParameters(resultPose, size)
+                    image.close()
                 }
                 .addOnFailureListener{
                     println("Detection FAILED :,(")
+                    image.close()
                 }
         }
-        image.close()
+
     }
 }
