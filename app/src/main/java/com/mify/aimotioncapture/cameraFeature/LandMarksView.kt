@@ -27,6 +27,7 @@ class LandMarksView(
         mainPaint.strokeWidth = 10.0F
         mainPaint.style = Paint.Style.FILL
     }
+
     private var detectedPose: Pose? = null
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
@@ -36,6 +37,36 @@ class LandMarksView(
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
+        drawPoints(canvas)
+        drawLines(canvas)
+       }
+
+    fun setParameters(pose: Pose, sourceSize: Size){
+        detectedPose = pose
+        sizeSource= sourceSize
+
+        invalidate()
+    }
+
+    private fun drawLandMark(landMark: PoseLandmark, drawCanvas: Canvas?) {
+        val position = convertPoint(landMark.position3D)
+        drawCanvas?.drawCircle(position.x, position.y, 5F, mainPaint)
+
+    }
+
+    private fun convertPoint(targetPosition: PointF3D):PointF{
+        val x1 = targetPosition.x
+        val y1 = targetPosition.y
+        val w1 = sizeSource.width
+        val h1 = sizeSource.height
+        val w2 = viewSize.width
+        val h2 = viewSize.height
+
+        val x2 = x1*w2/w1
+        val y2 = y1*h2/h1
+        return PointF(x2, y2)
+    }
+    private fun drawPoints(canvas: Canvas?) {
         var landMark = detectedPose?.getPoseLandmark(PoseLandmark.NOSE)
         if(landMark != null){
             drawLandMark(landMark, canvas)
@@ -96,32 +127,43 @@ class LandMarksView(
         landMark?.let{
             drawLandMark(it, canvas)
         }
+    }
 
+    private fun drawLines(canvas: Canvas?){
+        var firstLandMark = detectedPose?.getPoseLandmark(PoseLandmark.LEFT_MOUTH)
+        var secondLandMark = detectedPose?.getPoseLandmark(PoseLandmark.RIGHT_MOUTH)
+        if( firstLandMark != null && secondLandMark != null){
+            drawLine(firstLandMark, secondLandMark, canvas)
+        }
+        firstLandMark = detectedPose?.getPoseLandmark(PoseLandmark.LEFT_SHOULDER)
+        secondLandMark = detectedPose?.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER)
+        if( firstLandMark != null && secondLandMark != null){
+            drawLine(firstLandMark, secondLandMark, canvas)
+        }
+        firstLandMark = detectedPose?.getPoseLandmark(PoseLandmark.LEFT_SHOULDER)
+        secondLandMark = detectedPose?.getPoseLandmark(PoseLandmark.LEFT_ELBOW)
+        if( firstLandMark != null && secondLandMark != null){
+            drawLine(firstLandMark, secondLandMark, canvas)
+        }
+        firstLandMark = detectedPose?.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER)
+        secondLandMark = detectedPose?.getPoseLandmark(PoseLandmark.RIGHT_ELBOW)
+        if( firstLandMark != null && secondLandMark != null){
+            drawLine(firstLandMark, secondLandMark, canvas)
+        }
 
     }
-    fun setParameters(pose: Pose, sourceSize: Size){
-        detectedPose = pose
-        sizeSource= sourceSize
-
-        invalidate()
+    private fun drawLine(startPoint: PoseLandmark, endPoint: PoseLandmark, canvas: Canvas?) {
+        val conSP = convertPoint(startPoint.position3D)
+        val conEP = convertPoint(endPoint.position3D)
+        canvas?.drawLine(
+            conSP.x,
+            conSP.y,
+            conEP.x,
+            conEP.y,
+            mainPaint
+        )
     }
-    private fun drawLandMark(landMark: PoseLandmark, drawCanvas: Canvas?) {
-        val position = convertPoint(landMark.position3D)
-        drawCanvas?.drawCircle(position.x, position.y, 5F, mainPaint)
 
-    }
-    private fun convertPoint(targetPosition: PointF3D):PointF{
-        val x1 = targetPosition.x
-        val y1 = targetPosition.y
-        val w1 = sizeSource.width
-        val h1 = sizeSource.height
-        val w2 = viewSize.width
-        val h2 = viewSize.height
-
-        val x2 = x1*w2/w1
-        val y2 = y1*h2/h1
-        return PointF(x2, y2)
-    }
 
 
 
